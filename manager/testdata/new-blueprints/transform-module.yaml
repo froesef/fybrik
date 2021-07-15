@@ -33,6 +33,9 @@ spec:
       level: column
   api:
     endpoint:
+      # Always equals the release name: If this module exposes a common service than the host is the release
+      # name of the common service, otherwise it is the release name of the deployed module.
+      # It is mandatory if this module exposes a common service.
       host: common-transform-arrow-flight  # This can e.g. be used for multi-user modules
       selector: "mod: common-transform-arrow-flight"
       port: 80
