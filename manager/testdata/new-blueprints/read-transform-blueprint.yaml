@@ -32,7 +32,9 @@ spec:
           bucket: srcbucket
           object: data.parq
     service:
-      # name is the release name. It equals to M4DModule.spec.api.endpoint.host if such defined.
+      # Always equals the release name: If this module exposes a common service than the host is the release
+      # name of the common service, otherwise it is the release name of the deployed module.
+      # It is mandatory if this module exposes a common service.
       name: common-arrow-flight-read-service
       assetID: m4d-notebook-sample/paysim-csv # Differentiator to original asset for multi user arrow flight service? How to best specify?
       port: 8080
