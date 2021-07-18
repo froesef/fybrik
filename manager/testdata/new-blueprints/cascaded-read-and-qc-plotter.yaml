@@ -1,0 +1,147 @@
+# This represents an example workflow in order to show the specification of multiple modules.
+# It does not represent a real world workload.
+apiVersion: app.m4d.ibm.com/v1alpha2
+kind: Plotter
+metadata:
+  name: read-write
+  namespace: m4d-system
+  labels:
+spec:
+  appSelector: # Selector of the application that uses this workload
+    clusterName: thegreendragon
+    workloadSelector:
+      matchLabels:
+        app: demoapp
+  # Assets used by this workload and their sources
+  assets:
+  - dataSetID: "m4d-notebook-sample/paysim-csv"
+    source:
+      credentials:
+        read:
+          vault:
+            address: http://vault.m4d-system:8200
+            authPath: /v1/auth/kubernetes/login
+            role: module
+            secretPath: /v1/kubernetes-secrets/paysim-csv?namespace=m4d-notebook-sample
+      connection:
+        s3:
+          endpoint: localhost:8001
+          bucket: srcbucket
+          object: data.parq
+    dataPathFlowType: read # @Sima only one flow type?
+  modules:
+    - name: arrow-flight-common-read-conf
+      api:
+        endpoint:
+          host: common-arrow-flight-read-service  # This can e.g. be used for multi-user services
+          selector: "mod: common-arrow-flight-read-service" # Can be set for multi-user services
+          port: 80 # Mandatory for each service
+      chart:
+        name: ghcr.io/mesh-for-data/read-module-conf:0.1.0
+        values: {}
+    - name: arrow-flight-common-transform-conf
+      api:
+        endpoint:
+          host: common-transform-arrow-flight.service  # This can e.g. be used for multi-user modules
+          selector: "mod: common-transform-arrow-flight"
+          port: 80
+      chart:
+        name: ghcr.io/mesh-for-data/m4d-arrow-flight-common-transform-conf:0.1.0
+        values: {}
+    - name: arrow-flight-common-quality-check
+      chart:
+        name: ghcr.io/mesh-for-data/m4d-quality-check:0.1.0
+      api:
+        endpoint:
+          host: prometheus-ip  # This can e.g. be used for multi-user services
+          selector: "mod: common-prometheus-service" # Can be set for multi-user services
+          port: 9090 # Mandatory for each service
+  # Flows used in this workflow
+  # The syntax is reversed to argo as the default for m4d is parallel workflows.
+  # Two dashes start a new parallel action and the sub-flows with one dash are the in-path dataflows.
+  # flow 01 reads the data asset and offers it on an interface
+  # flow 02 reads the data asset from flow 01, applies actions and offers it to the application
+  # flow 03 applied quality check on data asset from flow 02
+  datasetFlows:
+  - - id: 01
+      module: arrow-flight-common-read-conf
+      cluster: theprancingpony
+      parameters:
+        api:
+          service:
+            operation: read # used for getting the appropriate credentials type of the dataset.
+            assetID: m4d-notebook-sample/paysim-csv
+            interfaceDetails:
+              protocol: arrow-flight
+              dataformat: arrow
+          source:
+            dataSetID: "m4d-notebook-sample/paysim-csv"
+    - id: 02
+      module: arrow-flight-common-transform-conf
+      cluster: thegreendragon
+      parameters:
+        api:
+          service:
+            operation: read # used for getting the appropriate credentials type of the dataset.
+            # Endpoint details and port are taken from the module specified above.
+            # That's why they are not part of the specification here. They will be written
+            # into the status though.
+            assetID: m4d-notebook-sample/paysim-csv
+            interfaceDetails:
+              protocol: arrow-flight
+              dataformat: arrow
+          source:
+            step: 01 # source is taken from pervious step
+              # source details are taken from spec of flow 01. No need to repeat here
+              actions:
+              - action: redact
+                column: blood_group
+    - id: 03
+      module: arrow-flight-common-quality-check
+      cluster: thegreendragon
+      parameters:
+        api:
+          service:
+            operation: read # used for getting the appropriate credentials type of the dataset.
+            # Endpoint details and port are taken from the module specified above.
+            # That's why they are not part of the specification here. They will be written
+            # into the status though.
+            assetID: m4d-notebook-sample/paysim-csv
+            interfaceDetails:
+              protocol: HTTP
+          source:
+            step: 02 # source is taken from pervious step
+          
+status:
+  observedState: Ready
+  observedGeneration: 1
+  steps:
+  - name: 01
+    status: Ready
+  - name: 02
+    status: Not Ready
+  - name: 03
+    status: Ready
+  assets:
+  - name: m4d-notebook-sample/paysim-csv
+    # Endpoint where the asset can be reached. If this was on a different cluster it might point to a different endpoint.
+    endpoints:  
+      - name: common-transform-arrow-flight.service 
+        status: Ready
+      - name: prometheus-ip 
+        status: Not Ready // QUESTION: does it mean that the whole dataset is not ready??
+    port: 8080
+    status: Not Ready
+    errors:
+    - "This would be a possible error"
+    steps:
+    - name: 01
+      status: Ready
+    - name: 02
+      status: Ready
+    - name: 03
+      status: Not Ready
+  conditions:
+  - type: Error
+    status: "False"
+    message: "This would be a possible error"
