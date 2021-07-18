@@ -5,17 +5,14 @@ metadata:
   namespace: m4d-system
   labels:
     version: 0.0.1
-    name: completion-module-job
+    name: completion-job
 spec:
   chart:
-    name: ghcr.io/mesh-for-data/m4d-completion-job:0.1.0
+    name: ghcr.io/mesh-for-data/m4d-copy-completion-job:0.1.0
   statusIndicators:
   capabilities:
-  - capability: audit
+  - capability: completion
     scope: dataset
-    sources:
-    - protocol: s3
-      dataformat: parquet
     sinks:
     - protocol: mail
       dataformat: plaintext
