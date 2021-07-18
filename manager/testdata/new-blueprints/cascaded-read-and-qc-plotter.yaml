@@ -48,7 +48,7 @@ spec:
       chart:
         name: ghcr.io/mesh-for-data/m4d-arrow-flight-common-transform-conf:0.1.0
         values: {}
-    - name: arrow-flight-common-quality-check
+    - name: quality-check-conf
       chart:
         name: ghcr.io/mesh-for-data/m4d-quality-check-conf:0.1.0
       api:
@@ -98,7 +98,7 @@ spec:
               - action: redact
                 column: blood_group
     - id: 03
-      module: arrow-flight-common-quality-check
+      module: quality-check-conf
       cluster: thegreendragon
       parameters:
         api:

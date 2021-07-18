@@ -73,9 +73,11 @@ spec:
         api: # not sure is the right structure 
           dest:
             dataSetID: "m4d-notebook-sample/COPY-paysim-csv"
+            operation: read # used for getting the appropriate credentials type of the dataset.
             format: parquet
           source:
             dataSetID: "m4d-notebook-sample/paysim-csv"
+            operation: write # used for getting the appropriate credentials type of the dataset.
             actions:
               - action: redact
                 column: blood_group
@@ -95,6 +97,7 @@ spec:
       parameters:
         source:
           step: 01 # source is taken from step 01
+          operation: read # used for getting the appropriate credentials type of the dataset.
           interfaceDetails:
             protocol: s3
             dataformat: parquet
