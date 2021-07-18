@@ -50,7 +50,7 @@ spec:
         values: {}
     - name: arrow-flight-common-quality-check
       chart:
-        name: ghcr.io/mesh-for-data/m4d-quality-check:0.1.0
+        name: ghcr.io/mesh-for-data/m4d-quality-check-conf:0.1.0
       api:
         endpoint:
           host: prometheus-ip  # This can e.g. be used for multi-user services
@@ -62,6 +62,7 @@ spec:
   # flow 01 reads the data asset and offers it on an interface
   # flow 02 reads the data asset from flow 01, applies actions and offers it to the application
   # flow 03 applied quality check on data asset from flow 02
+  # globalFlows are dropped for now may be used later if needed.
   datasetFlows:
   - - id: 01
       module: arrow-flight-common-read-conf

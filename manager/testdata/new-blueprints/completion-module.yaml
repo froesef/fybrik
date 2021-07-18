@@ -1,0 +1,24 @@
+apiVersion: app.m4d.ibm.com/v1alpha2
+kind: M4DModule
+metadata:
+  name: completion
+  namespace: m4d-system
+  labels:
+    version: 0.0.1
+    name: completion-module-job
+spec:
+  chart:
+    name: ghcr.io/mesh-for-data/m4d-completion-job:0.1.0
+  statusIndicators:
+  capabilities:
+  - capability: audit
+    scope: dataset
+    sources:
+    - protocol: s3
+      dataformat: parquet
+    sinks:
+    - protocol: mail
+      dataformat: plaintext
+    - protocol: slack
+      dataformat: plaintext
+
