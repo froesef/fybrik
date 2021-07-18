@@ -75,7 +75,7 @@ spec:
       module: completion-module-job
       cluster: thegreendragon
       parameters:
-        source:
+        source: 
           step: 02 # source is taken from pervious step
           # what should be passed here? only the dest?
             # source details are taken from spec of flow 01. No need to repeat here

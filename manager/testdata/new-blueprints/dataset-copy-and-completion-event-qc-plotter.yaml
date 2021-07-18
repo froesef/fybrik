@@ -95,15 +95,16 @@ spec:
       module: quality-check-conf
       cluster: thegreendragon
       parameters:
-        source:
-          step: 01 # source is taken from step 01
-          operation: read # used for getting the appropriate credentials type of the dataset.
-          interfaceDetails:
-            protocol: s3
-            dataformat: parquet
-          # can we assume that the kafaka queue details are known ahead to this module
-          # and the completion module? meaning no need to pass the details of how to connect to the
-          # queue to the modules?
+        api: # endpoint details are taken from modules list above
+          source:
+            step: 01 # source is taken from step 01
+            operation: read # used for getting the appropriate credentials type of the dataset.
+            interfaceDetails:
+              protocol: s3
+              dataformat: parquet
+            # can we assume that the kafaka queue details are known ahead to this module
+            # and the completion module? meaning no need to pass the details of how to connect to the
+            # queue to the modules?
 status:
   observedState: Ready
   observedGeneration: 1
