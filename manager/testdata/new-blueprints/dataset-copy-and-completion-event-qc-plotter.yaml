@@ -96,6 +96,14 @@ spec:
       cluster: thegreendragon
       parameters:
         api: # endpoint details are taken from modules list above
+          service:
+            # Endpoint details and port are taken from the module specified above.
+            # That's why they are not part of the specification here. They will be written
+            # into the status though.
+            assetID: m4d-notebook-sample/COPY-paysim-csv
+            interfaceDetails:
+              protocol: HTTP
+              dataformat: json
           source:
             step: 01 # source is taken from step 01
             operation: read # used for getting the appropriate credentials type of the dataset.
