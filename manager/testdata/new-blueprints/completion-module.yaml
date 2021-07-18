@@ -21,4 +21,7 @@ spec:
       dataformat: plaintext
     - protocol: slack
       dataformat: plaintext
+    - protocol: kafka
+      dataformat: json
+
 

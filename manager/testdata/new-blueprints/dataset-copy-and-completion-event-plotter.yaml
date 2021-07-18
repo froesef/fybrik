@@ -3,7 +3,7 @@
 apiVersion: app.m4d.ibm.com/v1alpha2
 kind: Plotter
 metadata:
-  name: read-write
+  name: copy-and-completion-event
   namespace: m4d-system
   labels:
 spec:
@@ -76,7 +76,9 @@ spec:
         source:
           step: 02 # source is taken from pervious step
             # source details are taken from spec of flow 01. No need to repeat here
-          
+          interfaceDetails:
+            protocol: kafka
+            dataformat: json
 status:
   observedState: Ready
   observedGeneration: 1
