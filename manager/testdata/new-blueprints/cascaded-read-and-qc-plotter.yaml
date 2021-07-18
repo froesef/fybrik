@@ -110,6 +110,7 @@ spec:
             assetID: m4d-notebook-sample/paysim-csv
             interfaceDetails:
               protocol: HTTP
+              dataformat: json
           source:
             step: 02 # source is taken from pervious step
             interfaceDetails:

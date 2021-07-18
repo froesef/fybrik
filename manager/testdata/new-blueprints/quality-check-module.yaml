@@ -27,9 +27,10 @@ spec:
       dataformat: plaintext
     - protocol: kafka
       dataformat: json
+    - protocol: HTTP
+      dataformat: json
   api:
     endpoint:
       host: prometheus-ip  # This can e.g. be used for multi-user services
       selector: "mod: common-prometheus-service" # Can be set for multi-user services
       port: 9090 # Mandatory for each service
-      protocol: HTTP
