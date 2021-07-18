@@ -73,7 +73,7 @@ spec:
         api: # not sure is the right structure 
           dest:
             dataSetID: "m4d-notebook-sample/COPY-paysim-csv"
-              format: parquet
+            format: parquet
           source:
             dataSetID: "m4d-notebook-sample/paysim-csv"
             actions:
@@ -95,9 +95,12 @@ spec:
       parameters:
         source:
           step: 01 # source is taken from step 01
+          interfaceDetails:
+            protocol: s3
+            dataformat: parquet
           # can we assume that the kafaka queue details are known ahead to this module
-          # and the completion module? meaning no need to pass the details of how to connet to the
-          # queue to the modules?         
+          # and the completion module? meaning no need to pass the details of how to connect to the
+          # queue to the modules?
 status:
   observedState: Ready
   observedGeneration: 1

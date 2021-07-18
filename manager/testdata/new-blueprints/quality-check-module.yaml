@@ -16,6 +16,8 @@ spec:
     sources:
     - protocol: s3
       dataformat: parquet
+    - protocol: m4d-arrow-flight
+      dataformat: arrow
     sinks:
     - protocol: s3
       dataformat: csv

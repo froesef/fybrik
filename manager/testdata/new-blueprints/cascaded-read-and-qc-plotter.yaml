@@ -112,6 +112,10 @@ spec:
               protocol: HTTP
           source:
             step: 02 # source is taken from pervious step
+            interfaceDetails:
+               protocol: m4d-arrow-flight
+               dataformat: arrow
+
           
 status:
   observedState: Ready
