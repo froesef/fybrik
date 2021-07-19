@@ -1,0 +1,119 @@
+# This represents an example workflow in order to show the specification of multiple modules.
+# It does not represent a real world workload.
+apiVersion: app.m4d.ibm.com/v1alpha2
+kind: Plotter
+metadata:
+  name: copy-and-completion-event
+  namespace: m4d-system
+  labels:
+spec:
+  appSelector: # Selector of the application that uses this workload
+    clusterName: thegreendragon
+    workloadSelector:
+      matchLabels:
+        app: demoapp
+  # Assets used by this workload and their sources
+  assets:
+  - dataSetID: "m4d-notebook-sample/paysim-csv"
+    source:
+      credentials:
+        read:
+          vault:
+            address: http://vault.m4d-system:8200
+            authPath: /v1/auth/kubernetes/login
+            role: module
+            secretPath: /v1/kubernetes-secrets/paysim-csv?namespace=m4d-notebook-sample
+      connection:
+        s3:
+          endpoint: localhost:8001
+          bucket: srcbucket
+          object: data.parq
+    - dataSetID: "m4d-notebook-sample/COPY-paysim-csv" # provided by the user
+      source:
+      credentials:
+        read:
+          vault:
+            address: http://vault.m4d-system:8200
+            authPath: /v1/auth/kubernetes/login
+            role: module
+            secretPath: /v1/kubernetes-secrets/paysim-csv?namespace=m4d-notebook-sample
+      connection:
+        s3:
+          endpoint: localhost:8001
+          bucket: destbucket
+          object: data.parq
+    dataPathFlowType: copy # @Sima only one flow type?
+  modules:
+    - name: copy-batch # QUESTION: can we assume that the user is providing the destination 
+      chart:
+        name: ghcr.io/mesh-for-data/m4d-copy-batch:0.1.0
+    - name: completion-module-job
+      chart:
+        name: ghcr.io/mesh-for-data/m4d-completion-job:0.1.0
+  # Flows used in this workflow
+  # The syntax is reversed to argo as the default for m4d is parallel workflows.
+  # Two dashes start a new parallel action and the sub-flows with one dash are the in-path dataflows.
+  # flow 01 copy the data asset to another s3 bucket
+  # flow 02 triggers a completion job upon flow 01 completion
+  datasetFlows:
+  - - id: 01
+      module: copy-batch
+      cluster: theprancingpony
+      parameters:
+        api: # not sure is the right structure 
+          dest:
+            operation: write # used for getting the appropriate credentials type of the dataset.
+            dataSetID: "m4d-notebook-sample/COPY-paysim-csv"
+              format: parquet
+          source:
+            operation: read # used for getting the appropriate credentials type of the dataset.
+            dataSetID: "m4d-notebook-sample/paysim-csv"
+            actions:
+              - action: redact
+                column: blood_group
+    - id: 02
+      module: completion-module-job
+      cluster: thegreendragon
+      parameters:
+        source: 
+          step: 02 # source is taken from pervious step
+          # what should be passed here? only the dest?
+            # source details are taken from spec of flow 01. No need to repeat here
+          interfaceDetails:
+            protocol: kafka
+            dataformat: json
+status:
+  observedState: Ready
+  observedGeneration: 1
+  steps:
+  - name: 01
+    status: Ready
+  - name: 02
+    status: Not Ready
+  assets:
+  - name: m4d-notebook-sample/paysim-csv
+    # Endpoint where the asset can be reached. If this was on a different cluster it might point to a different endpoint.
+    endpoints: 
+      s3:
+        endpoint: localhost:8001
+        bucket: destbucket
+        object: data.parq
+      vault:
+        address: http://vault.m4d-system:8200
+        authPath: /v1/auth/kubernetes/login
+        role: module
+        secretPath: /v1/kubernetes-secrets/paysim-csv?namespace=m4d-notebook-sample
+        format: parquet
+      status: Not Ready
+    status: Not Ready # a question: how is the status is calculated? based on what step? 
+    errors:
+    - "This would be a possible error"
+    steps:
+    - name: 01
+      status: Not Ready
+    - name: 02
+      status: Not Ready # how is the readiness of this step influence the readiness of the whole dataset?
+  conditions:
+  - type: Error
+    status: "False"
+    message: "This would be a possible error"

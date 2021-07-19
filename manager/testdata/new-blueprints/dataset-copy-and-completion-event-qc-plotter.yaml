@@ -1,0 +1,154 @@
+# This represents an example workflow in order to show the specification of multiple modules.
+# It does not represent a real world workload.
+apiVersion: app.m4d.ibm.com/v1alpha2
+kind: Plotter
+metadata:
+  name: copy-completion-event-quality-check
+  namespace: m4d-system
+  labels:
+spec:
+  appSelector: # Selector of the application that uses this workload
+    clusterName: thegreendragon
+    workloadSelector:
+      matchLabels:
+        app: demoapp
+  # Assets used by this workload and their sources
+  assets:
+  - dataSetID: "m4d-notebook-sample/paysim-csv"
+    source:
+      credentials:
+        read:
+          vault:
+            address: http://vault.m4d-system:8200
+            authPath: /v1/auth/kubernetes/login
+            role: module
+            secretPath: /v1/kubernetes-secrets/paysim-csv?namespace=m4d-notebook-sample
+      connection:
+        s3:
+          endpoint: localhost:8001
+          bucket: srcbucket
+          object: data.parq
+    - dataSetID: "m4d-notebook-sample/COPY-paysim-csv" # provided by the user
+      source:
+      credentials:
+        read:
+          vault:
+            address: http://vault.m4d-system:8200
+            authPath: /v1/auth/kubernetes/login
+            role: module
+            secretPath: /v1/kubernetes-secrets/paysim-csv?namespace=m4d-notebook-sample
+      connection:
+        s3:
+          endpoint: localhost:8001
+          bucket: destbucket
+          object: data.parq
+    dataPathFlowType: copy # @Sima only one flow type?
+  modules:
+    - name: copy-batch # QUESTION: can we assume that the user is providing the copy destination?
+      chart:
+        name: ghcr.io/mesh-for-data/m4d-copy-batch:0.1.0
+    - name: completion-module-job
+      chart:
+        name: ghcr.io/mesh-for-data/m4d-completion-job:0.1.0
+    - name: quality-check-conf 
+      chart:
+        name: ghcr.io/mesh-for-data/m4d-quality-check-conf:0.1.0
+      api:
+        endpoint:
+          host: prometheus-ip  # This can e.g. be used for multi-user services
+          selector: "mod: common-prometheus-service" # Can be set for multi-user services
+          port: 9090 # Mandatory for each service
+
+  # Flows used in this workflow
+  # The syntax is reversed to argo as the default for m4d is parallel workflows.
+  # Two dashes start a new parallel action and the sub-flows with one dash are the in-path dataflows.
+  # flow 01 copy the data asset to another s3 bucket
+  # flow 02 triggers a completion job upon flow 01 completion
+  # flow 03 triggers a quality check on the copied data from flow 01
+  datasetFlows:
+  - - id: 01
+      module: copy-batch
+      cluster: theprancingpony
+      parameters:
+        api: # not sure is the right structure 
+          dest:
+            dataSetID: "m4d-notebook-sample/COPY-paysim-csv"
+            operation: write # used for getting the appropriate credentials type of the dataset.
+            format: parquet
+          source:
+            dataSetID: "m4d-notebook-sample/paysim-csv"
+            operation: read # used for getting the appropriate credentials type of the dataset.
+            actions:
+              - action: redact
+                column: blood_group
+    - id: 02
+      module: completion-module-job
+      cluster: thegreendragon
+      parameters:
+        source:
+          step: 01 # source is taken from pervious step
+            # source details are taken from spec of flow 01. No need to repeat here
+          interfaceDetails:
+            protocol: kafka
+            dataformat: json
+    - id: 03
+      module: quality-check-conf
+      cluster: thegreendragon
+      parameters:
+        api: # endpoint details are taken from modules list above
+          service:
+            # Endpoint details and port are taken from the module specified above.
+            # That's why they are not part of the specification here. They will be written
+            # into the status though.
+            assetID: m4d-notebook-sample/COPY-paysim-csv
+            interfaceDetails:
+              protocol: HTTP
+              dataformat: json
+          source:
+            step: 01 # source is taken from step 01
+            operation: read # used for getting the appropriate credentials type of the dataset.
+            interfaceDetails:
+              protocol: s3
+              dataformat: parquet
+            # can we assume that the kafaka queue details are known ahead to this module
+            # and the completion module? meaning no need to pass the details of how to connect to the
+            # queue to the modules?
+status:
+  observedState: Ready
+  observedGeneration: 1
+  steps:
+  - name: 01
+    status: Ready
+  - name: 02
+    status: Not Ready
+  - name: 03
+    status: Not Ready
+  assets:
+  - name: m4d-notebook-sample/paysim-csv
+    # Endpoint where the asset can be reached. If this was on a different cluster it might point to a different endpoint.
+    endpoints: 
+      s3:
+        endpoint: localhost:8001
+        bucket: destbucket
+        object: data.parq
+      vault:
+        address: http://vault.m4d-system:8200
+        authPath: /v1/auth/kubernetes/login
+        role: module
+        secretPath: /v1/kubernetes-secrets/paysim-csv?namespace=m4d-notebook-sample
+        format: parquet
+      status: Not Ready
+    status: Not Ready # a question: how is the status is calculated? based on which step? 
+    errors:
+    - "This would be a possible error"
+    steps:
+    - name: 01
+      status: Not Ready
+    - name: 02
+      status: Not Ready # how is the readiness of this step influence the readiness of the whole dataset?
+    - name: 03
+      status: Not Ready 
+  conditions:
+  - type: Error
+    status: "False"
+    message: "This would be a possible error"
