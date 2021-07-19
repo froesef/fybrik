@@ -70,12 +70,12 @@ spec:
       parameters:
         api:
           service:
-            operation: read # used for getting the appropriate credentials type of the dataset.
             assetID: m4d-notebook-sample/paysim-csv
             interfaceDetails:
               protocol: arrow-flight
               dataformat: arrow
           source:
+            operation: read # used for getting the appropriate credentials type of the dataset.
             dataSetID: "m4d-notebook-sample/paysim-csv"
     - id: 02
       module: arrow-flight-common-transform-conf
@@ -83,7 +83,6 @@ spec:
       parameters:
         api:
           service:
-            operation: read # used for getting the appropriate credentials type of the dataset.
             # Endpoint details and port are taken from the module specified above.
             # That's why they are not part of the specification here. They will be written
             # into the status though.
@@ -92,6 +91,7 @@ spec:
               protocol: arrow-flight
               dataformat: arrow
           source:
+            operation: read # used for getting the appropriate credentials type of the dataset.
             step: 01 # source is taken from pervious step
               # source details are taken from spec of flow 01. No need to repeat here
               actions:
@@ -103,7 +103,6 @@ spec:
       parameters:
         api:
           service:
-            operation: read # used for getting the appropriate credentials type of the dataset.
             # Endpoint details and port are taken from the module specified above.
             # That's why they are not part of the specification here. They will be written
             # into the status though.
@@ -113,6 +112,7 @@ spec:
               dataformat: json
           source:
             step: 02 # source is taken from pervious step
+            operation: read # used for getting the appropriate credentials type of the dataset.
             interfaceDetails:
                protocol: m4d-arrow-flight
                dataformat: arrow
