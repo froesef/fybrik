@@ -72,12 +72,6 @@ spec:
           parameters:
             source:
               assetId: "m4d-notebook-sample/paysim"
-            api:
-              service:
-                assetID: m4d-notebook-sample/paysim
-                interfaceDetails:
-                  protocol: arrow-flight
-                  dataformat: arrow
             actions:
             - action: redact
               column: field1
@@ -96,12 +90,6 @@ spec:
           parameters:
             source:
               assetId: "m4d-notebook-sample/users"
-            api:
-              service:
-                assetID: m4d-notebook-sample/users
-                interfaceDetails:
-                  protocol: arrow-flight
-                  dataformat: arrow
             actions:
             - action: redact
               column: blood_group
@@ -120,12 +108,6 @@ spec:
           parameters:
             source:
               assetId: "m4d-notebook-sample/inventory"
-            api:
-              service:
-                assetID: m4d-notebook-sample/inventory
-                interfaceDetails:
-                  protocol: arrow-flight
-                  dataformat: arrow
             actions:
             - action: redact
               column: field2
@@ -136,10 +118,22 @@ spec:
       kind: M4DModule
       chart:
         name: ghcr.io/mesh-for-data/read-module:0.1.0
+      capabilities:
+        - capability: read
+          scope: workload
     - name: transform-conf
       kind: M4DModule
       chart:
         name: ghcr.io/mesh-for-data/m4d-arrow-flight-transform-conf:0.1.0
+      capabilities:
+      - capability: transform
+        scope: asset
+        actions:
+        - id: redact
+          level: column
+        - id: remove
+          level: column
+
 status:
   observedState: Not Ready
   observedGeneration: 1

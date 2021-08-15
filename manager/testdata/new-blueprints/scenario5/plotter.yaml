@@ -27,6 +27,11 @@ spec:
         bucket: destbucket
         object: data.csv
     dataformat: csv
+  - assetId: "temp-paysim-processed"
+    connection:
+      flight-module:
+        endpoint: app1-ns1-write:80
+        assetId: "paysim-processed"
   flows:
   - name: flow-paysim
     flowType: write
@@ -43,22 +48,12 @@ spec:
           parameters:
             sink: # This technically has multiple sinks. One being the dataset and the other the following step2
               assetId: "paysim-processed"
-            api:
-              service:
-                assetID: paysim-processed
-                interfaceDetails:
-                  protocol: arrow-flight
-                  dataformat: arrow
         - name: step2
           cluster: thegreendragon
           template: qualityTemplate
           parameters:
-            api:
-              service:
-                assetID: paysim-processed
-                interfaceDetails:
-                  protocol: arrow-flight
-                  dataformat: arrow
+            source:
+              assetID: temp-paysim-processed
   templates:
   - name: writeTemplate
     modules:
@@ -66,12 +61,18 @@ spec:
       kind: M4DModule
       chart:
         name: ghcr.io/mesh-for-data/write-module:0.1.0
+      - capability: write
+        scope: workload
   - name: qualityTemplate
     modules:
     - name: data-quality
       kind: M4DModule
       chart:
         name: ghcr.io/mesh-for-data/data-quality:0.1.0
+      capabilities:
+      - capability: data-quality
+        scope: workload
+
 status:
   observedState: Ready
   observedGeneration: 1
