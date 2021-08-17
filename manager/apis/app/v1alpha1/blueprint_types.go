@@ -47,6 +47,11 @@ type WriteModuleArgs struct {
 	// +required
 	Destination DataStore `json:"destination"`
 
+	// AssetID identifies the asset to be used for accessing the data when it is ready
+	// It is copied from the FybrikApplication resource
+	// +optional
+	AssetID string `json:"assetID"`
+
 	// Transformations are different types of processing that may be done to the data as it is written.
 	// +optional
 	Transformations []serde.Arbitrary `json:"transformations,omitempty"`
@@ -80,17 +85,49 @@ type BlueprintModule struct {
 	// +required
 	InstanceName string `json:"instanceName"`
 
+	// +required
+	ModuleName string `json:"moduleName"`
+
 	// Chart contains the location of the helm chart with info detailing how to deploy
 	// +required
 	Chart ChartSpec `json:"chart"`
 
-	// Arguments are the input parameters for a specific instance of a module.
 	// +optional
-	Arguments ModuleArguments `json:"arguments,omitempty"`
+	API *ModuleAPI `json:"api,omitempty"`
+
+	// +optional
+	SourceAssets []AssetConfiguration `json:"sourceAssets,omitempty"`
+
+	// +optional
+	SinkAssets []AssetConfiguration `json:"sinkAssets,omitempty"`
+
+	// +optional
+	ServiceModule string `json:"serviceModule,omitempty"`
 
 	// assetIDs indicate the assets processed by this module.  Included so we can track asset status
 	// as well as module status in the future.
 	AssetIDs []string `json:"assetIds,omitempty"`
+}
+
+type AssetConfiguration struct {
+	// +required
+	AssetId string `json:"assetId"`
+
+	// Credentials map. It may contain different credentials for read/write. That's why it's a map
+	// +optional
+	Credentials map[string]Vault `json:"vault"`
+
+	// Connection has the relevant details for accesing the data (url, table, ssl, etc.)
+	// +required
+	Connection serde.Arbitrary `json:"connection"`
+
+	// Format represents data format (e.g. parquet) as received from catalog connectors
+	// +required
+	Format string `json:"format"`
+
+	// Actions are different types of processing that may be done to the data as it is written.
+	// +optional
+	Actions []serde.Arbitrary `json:"actions,omitempty"`
 }
 
 // BlueprintSpec defines the desired state of Blueprint, which defines the components of the workload's data path

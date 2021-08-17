@@ -90,7 +90,6 @@ func TestShortReleaseName(t *testing.T) {
 		Name:         "dataFlow",
 		InstanceName: "dataFlowInstance1",
 		Chart:        app.ChartSpec{Name: "thechart"},
-		Arguments:    app.ModuleArguments{},
 	}}
 
 	blueprint := app.Blueprint{

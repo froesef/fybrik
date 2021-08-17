@@ -131,9 +131,72 @@ func TestFybrikApplicationControllerCSVCopyAndRead(t *testing.T) {
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	bpSpec := plotter.Spec.Blueprints["thegreendragon"]
 	g.Expect(bpSpec.Modules[0].Name).To(gomega.Equal("implicit-copy-batch"))
-	g.Expect(bpSpec.Modules[0].Arguments.Copy.Source.Format).To(gomega.Equal("csv"))
-	g.Expect(bpSpec.Modules[0].Arguments.Copy.Destination.Format).To(gomega.Equal("csv"))
-	g.Expect(bpSpec.Modules[0].Arguments.Copy.Destination.Format).To(gomega.Equal(bpSpec.Modules[1].Arguments.Read[0].Source.Format))
+	g.Expect(bpSpec.Modules[0].SourceAssets[0].Format).To(gomega.Equal("csv"))
+	g.Expect(bpSpec.Modules[0].SinkAssets[0].Format).To(gomega.Equal("csv"))
+	g.Expect(bpSpec.Modules[0].SinkAssets[0].Format).To(gomega.Equal(bpSpec.Modules[1].SourceAssets[0].Format))
+}
+
+func TestE2EAsUnit(t *testing.T) {
+	t.Parallel()
+	g := gomega.NewGomegaWithT(t)
+	// Set the logger to development mode for verbose logs.
+	logf.SetLogger(zap.New(zap.UseDevMode(true)))
+
+	var (
+		name      = "notebook"
+		namespace = "default"
+	)
+
+	module := &app.FybrikModule{}
+	g.Expect(readObjectFromFile("../../testdata/e2e/module-read.yaml", module)).ToNot(gomega.HaveOccurred())
+	application := &app.FybrikApplication{}
+	g.Expect(readObjectFromFile("../../testdata/e2e/fybrikapplication.yaml", application)).ToNot(gomega.HaveOccurred())
+	application.Name = name
+	application.Namespace = namespace
+	applicationKey := client.ObjectKeyFromObject(application)
+
+	// Objects to track in the fake client.
+	objs := []runtime.Object{
+		module,
+		application,
+	}
+
+	// Register operator types with the runtime scheme.
+	s := utils.NewScheme(g)
+
+	// Create a fake client to mock API calls.
+	cl := fake.NewFakeClientWithScheme(s, objs...)
+
+	r := createTestFybrikApplicationController(cl, s)
+	// Mock request to simulate Reconcile() being called on an event for a
+	// watched resource .
+	req := reconcile.Request{
+		NamespacedName: applicationKey,
+	}
+
+	res, err := r.Reconcile(context.Background(), req)
+	g.Expect(err).To(gomega.BeNil())
+
+	// Check the result of reconciliation to make sure it has the desired state.
+	g.Expect(res.Requeue).To(gomega.BeFalse(), "reconcile did not requeue request as expected")
+
+	// Check if Application generated a plotter
+	err = cl.Get(context.TODO(), req.NamespacedName, application)
+	g.Expect(err).To(gomega.BeNil(), "Cannot fetch fybrikapplication")
+	g.Expect(application.Status.Generated).NotTo(gomega.BeNil())
+
+	plotterObjectKey := types.NamespacedName{
+		Namespace: "fybrik-system",
+		Name:      "notebook-default",
+	}
+	plotter := &app.Plotter{}
+	err = cl.Get(context.Background(), plotterObjectKey, plotter)
+	g.Expect(err).NotTo(gomega.HaveOccurred())
+	bpSpec := plotter.Spec.Blueprints["thegreendragon"]
+	g.Expect(bpSpec.Modules[0].Name).To(gomega.Equal("read-module-test-e2e"))
+	g.Expect(bpSpec.Modules[0].SourceAssets[0].Format).To(gomega.Equal("parquet"))
+	g.Expect(bpSpec.Modules[0].SourceAssets[0].Credentials).To(gomega.Not(gomega.BeNil()))
+	g.Expect(bpSpec.Modules[0].SourceAssets[0].Connection).To(gomega.Not(gomega.BeNil()))
 }
 
 // This test checks proper reconciliation of FybrikApplication finalizers
@@ -476,9 +539,9 @@ func TestMultipleDatasets(t *testing.T) {
 	g.Expect(blueprint).NotTo(gomega.BeNil())
 	numReads := 0
 	for _, module := range blueprint.Modules {
-		if len(module.Arguments.Read) > 0 {
+		if module.ModuleName == "read-parquet" {
 			numReads++
-			g.Expect(len(module.Arguments.Read)).To(gomega.Equal(2), "A read module should support both datasets")
+			g.Expect(len(module.SourceAssets)).To(gomega.Equal(2), "A read module should support both datasets")
 		}
 	}
 	g.Expect(numReads).To(gomega.Equal(1), "A single read module should be instantiated")

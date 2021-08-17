@@ -69,9 +69,56 @@ func (r *FybrikApplicationReconciler) GenerateBlueprint(instances []modules.Modu
 
 		var blueprintModule app.BlueprintModule
 		blueprintModule.Name = modulename
+		blueprintModule.ModuleName = modulename
 		blueprintModule.InstanceName = utils.CreateStepName(modulename, moduleInstance.AssetID) // Need unique name for each module so include ids for dataset
-		blueprintModule.Arguments = *moduleInstance.Args
 		blueprintModule.Chart = moduleInstance.Module.Spec.Chart
+
+		// Translate read arguments
+		for _, readArguments := range moduleInstance.Args.Read {
+			var sourceAsset app.AssetConfiguration
+			sourceAsset.Format = readArguments.Source.Format
+			sourceAsset.Actions = readArguments.Transformations
+			sourceAsset.Connection = readArguments.Source.Connection
+			sourceAsset.AssetId = readArguments.AssetID
+			sourceAsset.Credentials = readArguments.Source.Vault
+
+			blueprintModule.SourceAssets = append(blueprintModule.SourceAssets, sourceAsset)
+		}
+
+		// Translate copy arguments
+		if (moduleInstance.Args.Copy != nil) {
+			var copySrc app.AssetConfiguration
+			copyArgs := moduleInstance.Args.Copy
+			copySrc.Format = copyArgs.Source.Format
+			copySrc.Actions = copyArgs.Transformations
+			copySrc.Connection = copyArgs.Source.Connection
+			copySrc.AssetId = moduleInstance.AssetID
+			copySrc.Credentials = copyArgs.Source.Vault
+
+			blueprintModule.SourceAssets = append(blueprintModule.SourceAssets, copySrc)
+
+			var copySink app.AssetConfiguration
+			copySink.Format = copyArgs.Destination.Format
+			copySink.Actions = copyArgs.Transformations
+			copySink.Connection = copyArgs.Destination.Connection
+			copySink.AssetId = moduleInstance.AssetID
+			copySink.Credentials = copyArgs.Source.Vault
+
+			blueprintModule.SinkAssets = append(blueprintModule.SinkAssets, copySink)
+		}
+
+		// Translate write arguments
+		for _, writeArguments := range moduleInstance.Args.Write {
+			var sinkAsset app.AssetConfiguration
+			sinkAsset.Format = writeArguments.Destination.Format
+			sinkAsset.Actions = writeArguments.Transformations
+			sinkAsset.Connection = writeArguments.Destination.Connection
+			sinkAsset.AssetId = writeArguments.AssetID
+			sinkAsset.Credentials = writeArguments.Destination.Vault
+
+			blueprintModule.SinkAssets = append(blueprintModule.SinkAssets, sinkAsset)
+		}
+
 		blueprintModules = append(blueprintModules, blueprintModule)
 	}
 

@@ -47,212 +47,33 @@ spec:
                 items:
                   description: BlueprintModule is a copy of a FybrikModule Custom Resource.  It contains the information necessary to instantiate a datapath component, including the parameters relevant for the particular workload.
                   properties:
-                    arguments:
-                      description: Arguments are the input parameters for a specific instance of a module.
+                    api:
                       properties:
-                        copy:
-                          description: CopyArgs are parameters specific to modules that copy data from one data store to another.
+                        dataformat:
+                          description: DataFormat defines the data format type
+                          type: string
+                        endpoint:
+                          description: EndpointSpec is used both by the module creator and by the status of the fybrikapplication
                           properties:
-                            destination:
-                              description: Destination is the data store to which the data will be copied
-                              properties:
-                                connection:
-                                  description: Connection has the relevant details for accesing the data (url, table, ssl, etc.)
-                                  type: object
-                                  x-kubernetes-preserve-unknown-fields: true
-                                format:
-                                  description: Format represents data format (e.g. parquet) as received from catalog connectors
-                                  type: string
-                                vault:
-                                  additionalProperties:
-                                    description: Holds details for retrieving credentials from Vault store.
-                                    properties:
-                                      address:
-                                        description: Address is Vault address
-                                        type: string
-                                      authPath:
-                                        description: AuthPath is the path to auth method i.e. kubernetes
-                                        type: string
-                                      role:
-                                        description: Role is the Vault role used for retrieving the credentials
-                                        type: string
-                                      secretPath:
-                                        description: SecretPath is the path of the secret holding the Credentials in Vault
-                                        type: string
-                                    required:
-                                    - address
-                                    - authPath
-                                    - role
-                                    - secretPath
-                                    type: object
-                                  description: Holds details for retrieving credentials by the modules from Vault store. It is a map so that different credentials can be stored for the different DataStoreActions
-                                  type: object
-                              required:
-                              - connection
-                              - format
-                              - vault
-                              type: object
-                            source:
-                              description: Source is the where the data currently resides
-                              properties:
-                                connection:
-                                  description: Connection has the relevant details for accesing the data (url, table, ssl, etc.)
-                                  type: object
-                                  x-kubernetes-preserve-unknown-fields: true
-                                format:
-                                  description: Format represents data format (e.g. parquet) as received from catalog connectors
-                                  type: string
-                                vault:
-                                  additionalProperties:
-                                    description: Holds details for retrieving credentials from Vault store.
-                                    properties:
-                                      address:
-                                        description: Address is Vault address
-                                        type: string
-                                      authPath:
-                                        description: AuthPath is the path to auth method i.e. kubernetes
-                                        type: string
-                                      role:
-                                        description: Role is the Vault role used for retrieving the credentials
-                                        type: string
-                                      secretPath:
-                                        description: SecretPath is the path of the secret holding the Credentials in Vault
-                                        type: string
-                                    required:
-                                    - address
-                                    - authPath
-                                    - role
-                                    - secretPath
-                                    type: object
-                                  description: Holds details for retrieving credentials by the modules from Vault store. It is a map so that different credentials can be stored for the different DataStoreActions
-                                  type: object
-                              required:
-                              - connection
-                              - format
-                              - vault
-                              type: object
-                            transformations:
-                              description: Transformations are different types of processing that may be done to the data as it is copied.
-                              items:
-                                type: object
-                                x-kubernetes-preserve-unknown-fields: true
-                              type: array
+                            hostname:
+                              description: Always equals the release name. Can be omitted.
+                              type: string
+                            port:
+                              format: int32
+                              type: integer
+                            scheme:
+                              description: 'For example: http, https, grpc, grpc+tls, jdbc:oracle:thin:@ etc'
+                              type: string
                           required:
-                          - destination
-                          - source
+                          - port
+                          - scheme
                           type: object
-                        read:
-                          description: ReadArgs are parameters that are specific to modules that enable an application to read data
-                          items:
-                            description: ReadModuleArgs define the input parameters for modules that read data from location A
-                            properties:
-                              assetID:
-                                description: AssetID identifies the asset to be used for accessing the data when it is ready It is copied from the FybrikApplication resource
-                                type: string
-                              source:
-                                description: Source of the read path module
-                                properties:
-                                  connection:
-                                    description: Connection has the relevant details for accesing the data (url, table, ssl, etc.)
-                                    type: object
-                                    x-kubernetes-preserve-unknown-fields: true
-                                  format:
-                                    description: Format represents data format (e.g. parquet) as received from catalog connectors
-                                    type: string
-                                  vault:
-                                    additionalProperties:
-                                      description: Holds details for retrieving credentials from Vault store.
-                                      properties:
-                                        address:
-                                          description: Address is Vault address
-                                          type: string
-                                        authPath:
-                                          description: AuthPath is the path to auth method i.e. kubernetes
-                                          type: string
-                                        role:
-                                          description: Role is the Vault role used for retrieving the credentials
-                                          type: string
-                                        secretPath:
-                                          description: SecretPath is the path of the secret holding the Credentials in Vault
-                                          type: string
-                                      required:
-                                      - address
-                                      - authPath
-                                      - role
-                                      - secretPath
-                                      type: object
-                                    description: Holds details for retrieving credentials by the modules from Vault store. It is a map so that different credentials can be stored for the different DataStoreActions
-                                    type: object
-                                required:
-                                - connection
-                                - format
-                                - vault
-                                type: object
-                              transformations:
-                                description: Transformations are different types of processing that may be done to the data
-                                items:
-                                  type: object
-                                  x-kubernetes-preserve-unknown-fields: true
-                                type: array
-                            required:
-                            - assetID
-                            - source
-                            type: object
-                          type: array
-                        write:
-                          description: WriteArgs are parameters that are specific to modules that enable an application to write data
-                          items:
-                            description: WriteModuleArgs define the input parameters for modules that write data to location B
-                            properties:
-                              destination:
-                                description: Destination is the data store to which the data will be written
-                                properties:
-                                  connection:
-                                    description: Connection has the relevant details for accesing the data (url, table, ssl, etc.)
-                                    type: object
-                                    x-kubernetes-preserve-unknown-fields: true
-                                  format:
-                                    description: Format represents data format (e.g. parquet) as received from catalog connectors
-                                    type: string
-                                  vault:
-                                    additionalProperties:
-                                      description: Holds details for retrieving credentials from Vault store.
-                                      properties:
-                                        address:
-                                          description: Address is Vault address
-                                          type: string
-                                        authPath:
-                                          description: AuthPath is the path to auth method i.e. kubernetes
-                                          type: string
-                                        role:
-                                          description: Role is the Vault role used for retrieving the credentials
-                                          type: string
-                                        secretPath:
-                                          description: SecretPath is the path of the secret holding the Credentials in Vault
-                                          type: string
-                                      required:
-                                      - address
-                                      - authPath
-                                      - role
-                                      - secretPath
-                                      type: object
-                                    description: Holds details for retrieving credentials by the modules from Vault store. It is a map so that different credentials can be stored for the different DataStoreActions
-                                    type: object
-                                required:
-                                - connection
-                                - format
-                                - vault
-                                type: object
-                              transformations:
-                                description: Transformations are different types of processing that may be done to the data as it is written.
-                                items:
-                                  type: object
-                                  x-kubernetes-preserve-unknown-fields: true
-                                type: array
-                            required:
-                            - destination
-                            type: object
-                          type: array
+                        protocol:
+                          description: Protocol defines the interface protocol used for data transactions
+                          type: string
+                      required:
+                      - endpoint
+                      - protocol
                       type: object
                     assetIds:
                       description: assetIDs indicate the assets processed by this module.  Included so we can track asset status as well as module status in the future.
@@ -276,12 +97,113 @@ spec:
                     instanceName:
                       description: InstanceName is the unique name for the deployed instance related to this workload
                       type: string
+                    moduleName:
+                      type: string
                     name:
                       description: Name of the fybrikmodule on which this is based
                       type: string
+                    serviceModule:
+                      type: string
+                    sinkAssets:
+                      items:
+                        properties:
+                          actions:
+                            description: Actions are different types of processing that may be done to the data as it is written.
+                            items:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            type: array
+                          assetId:
+                            type: string
+                          connection:
+                            description: Connection has the relevant details for accesing the data (url, table, ssl, etc.)
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          format:
+                            description: Format represents data format (e.g. parquet) as received from catalog connectors
+                            type: string
+                          vault:
+                            additionalProperties:
+                              description: Holds details for retrieving credentials from Vault store.
+                              properties:
+                                address:
+                                  description: Address is Vault address
+                                  type: string
+                                authPath:
+                                  description: AuthPath is the path to auth method i.e. kubernetes
+                                  type: string
+                                role:
+                                  description: Role is the Vault role used for retrieving the credentials
+                                  type: string
+                                secretPath:
+                                  description: SecretPath is the path of the secret holding the Credentials in Vault
+                                  type: string
+                              required:
+                              - address
+                              - authPath
+                              - role
+                              - secretPath
+                              type: object
+                            description: Credentials map. It may contain different credentials for read/write. That's why it's a map
+                            type: object
+                        required:
+                        - assetId
+                        - connection
+                        - format
+                        type: object
+                      type: array
+                    sourceAssets:
+                      items:
+                        properties:
+                          actions:
+                            description: Actions are different types of processing that may be done to the data as it is written.
+                            items:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            type: array
+                          assetId:
+                            type: string
+                          connection:
+                            description: Connection has the relevant details for accesing the data (url, table, ssl, etc.)
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          format:
+                            description: Format represents data format (e.g. parquet) as received from catalog connectors
+                            type: string
+                          vault:
+                            additionalProperties:
+                              description: Holds details for retrieving credentials from Vault store.
+                              properties:
+                                address:
+                                  description: Address is Vault address
+                                  type: string
+                                authPath:
+                                  description: AuthPath is the path to auth method i.e. kubernetes
+                                  type: string
+                                role:
+                                  description: Role is the Vault role used for retrieving the credentials
+                                  type: string
+                                secretPath:
+                                  description: SecretPath is the path of the secret holding the Credentials in Vault
+                                  type: string
+                              required:
+                              - address
+                              - authPath
+                              - role
+                              - secretPath
+                              type: object
+                            description: Credentials map. It may contain different credentials for read/write. That's why it's a map
+                            type: object
+                        required:
+                        - assetId
+                        - connection
+                        - format
+                        type: object
+                      type: array
                   required:
                   - chart
                   - instanceName
+                  - moduleName
                   - name
                   type: object
                 type: array

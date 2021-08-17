@@ -240,7 +240,7 @@ func (r *BlueprintReconciler) reconcile(ctx context.Context, log logr.Logger, bl
 	for _, module := range blueprint.Spec.Modules {
 		// Get arguments by type
 		var args map[string]interface{}
-		args, err := utils.StructToMap(module.Arguments)
+		args, err := utils.StructToMap(module)
 		if err != nil {
 			return ctrl.Result{}, errors.WithMessage(err, "Blueprint step arguments are invalid")
 		}
@@ -257,7 +257,7 @@ func (r *BlueprintReconciler) reconcile(ctx context.Context, log logr.Logger, bl
 				blueprint.Status.ObservedState.Error += errors.Wrap(err, "ChartDeploymentFailure: ").Error() + "\n"
 			}
 		} else if rel.Info.Status == release.StatusDeployed {
-			if len(module.Arguments.Read) > 0 {
+			if len(module.SinkAssets) > 0 { // TODO Hardcoded hack for read module. Replace this
 				blueprint.Status.ObservedState.DataAccessInstructions += rel.Info.Notes
 			}
 			status, errMsg := r.checkReleaseStatus(releaseName, blueprint.Namespace)

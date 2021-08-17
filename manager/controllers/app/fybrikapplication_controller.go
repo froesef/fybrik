@@ -247,40 +247,42 @@ func (r *FybrikApplicationReconciler) deleteExternalResources(applicationContext
 // setReadModulesEndpoints populates the ReadEndpointsMap map in the status of the fybrikapplication
 // Current implementation assumes there is only one cluster with read modules (which is the same cluster the user's workload)
 func setReadModulesEndpoints(applicationContext *app.FybrikApplication, blueprintsMap map[string]app.BlueprintSpec, moduleMap map[string]*app.FybrikModule) {
-	var foundReadEndpoints = false
-	for _, blueprintSpec := range blueprintsMap {
-		for _, module := range blueprintSpec.Modules {
-			if module.Arguments.Read != nil {
-				// We found a read module
-				foundReadEndpoints = true
-				releaseName := utils.GetReleaseName(applicationContext.ObjectMeta.Name, applicationContext.ObjectMeta.Namespace, module)
-				moduleName := module.Name
-
-				// Find the read capability section in the module
-				// TODO: What if there are more than one read capability sections?  How do we know which endpoint
-				// to choose?  They could in theory be different, although that's not likely
-				// Currently the last one on the list is used.
-				if hasRead, caps := utils.GetModuleCapabilities(moduleMap[moduleName], app.Read); hasRead {
-					for _, cap := range caps {
-						originalEndpointSpec := cap.API.Endpoint
-						fqdn := utils.GenerateModuleEndpointFQDN(releaseName, BlueprintNamespace)
-						for _, arg := range module.Arguments.Read {
-							applicationContext.Status.ReadEndpointsMap[arg.AssetID] = app.EndpointSpec{
-								Hostname: fqdn,
-								Port:     originalEndpointSpec.Port,
-								Scheme:   originalEndpointSpec.Scheme,
-							}
-						}
-					}
-				}
-			}
-		}
-
-		// We found a blueprint with read modules
-		if foundReadEndpoints {
-			return
-		}
-	}
+	// TODO This needs to be replaced with endpoints that are retrieved from the plotter status
+	return
+	//var foundReadEndpoints = false
+	//for _, blueprintSpec := range blueprintsMap {
+	//	for _, module := range blueprintSpec.Modules {
+	//		if module.Arguments.Read != nil {
+	//			// We found a read module
+	//			foundReadEndpoints = true
+	//			releaseName := utils.GetReleaseName(applicationContext.ObjectMeta.Name, applicationContext.ObjectMeta.Namespace, module)
+	//			moduleName := module.Name
+	//
+	//			// Find the read capability section in the module
+	//			// TODO: What if there are more than one read capability sections?  How do we know which endpoint
+	//			// to choose?  They could in theory be different, although that's not likely
+	//			// Currently the last one on the list is used.
+	//			if hasRead, caps := utils.GetModuleCapabilities(moduleMap[moduleName], app.Read); hasRead {
+	//				for _, cap := range caps {
+	//					originalEndpointSpec := cap.API.Endpoint
+	//					fqdn := utils.GenerateModuleEndpointFQDN(releaseName, BlueprintNamespace)
+	//					for _, arg := range module.Arguments.Read {
+	//						applicationContext.Status.ReadEndpointsMap[arg.AssetID] = app.EndpointSpec{
+	//							Hostname: fqdn,
+	//							Port:     originalEndpointSpec.Port,
+	//							Scheme:   originalEndpointSpec.Scheme,
+	//						}
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//
+	//	// We found a blueprint with read modules
+	//	if foundReadEndpoints {
+	//		return
+	//	}
+	//}
 }
 
 // reconcile receives either FybrikApplication CRD
