@@ -13,6 +13,7 @@ spec:
   data:
     - dataSetID: s3-external/xxx
       requirements:
+        dataFlows: ["read"]
         copy:
           required: true
           catalog:

@@ -100,6 +100,11 @@ spec:
                                 copied.
                               type: boolean
                           type: object
+                        dataFlows:
+                          description: Data flows for this data asset
+                          items:
+                            type: string
+                          type: array
                         interface:
                           description: Interface indicates the protocol and format
                             expected by the data user

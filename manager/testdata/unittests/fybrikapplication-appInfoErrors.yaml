@@ -16,6 +16,7 @@ spec:
   data:
     - dataSetID: s3/redact-dataset
       requirements:
+        dataFlows: ["read"]
         interface: 
           protocol: fybrik-arrow-flight
           dataformat: arrow

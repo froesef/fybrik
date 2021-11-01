@@ -40,6 +40,10 @@ type DataRequirements struct {
 	// CopyRequrements include the requirements for copying the data
 	// +optional
 	Copy CopyRequirements `json:"copy,omitempty"`
+
+	// Data flows for this data asset
+	// + required
+	DataFlows []DataFlow `json:"dataFlows,omitempty"`
 }
 
 // DataContext indicates data set chosen by the Data Scientist to be used by his application,

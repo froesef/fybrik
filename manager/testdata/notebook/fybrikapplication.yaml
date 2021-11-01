@@ -19,6 +19,7 @@ spec:
   data:
     - dataSetID: 'fybrik-notebook-sample/data-csv'
       requirements:
+        dataFlows: ["read"]
         interface:
           protocol: fybrik-arrow-flight
           dataformat: arrow

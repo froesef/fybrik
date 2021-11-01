@@ -1214,6 +1214,13 @@ Requirements from the system
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>dataFlows</b></td>
+        <td>[]string</td>
+        <td>
+          Data flows for this data asset<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#fybrikapplicationspecdataindexrequirementsinterface">interface</a></b></td>
         <td>object</td>
         <td>
