@@ -1,182 +1,185 @@
-apiVersion: app.m4d.ibm.com/v1alpha2
+apiVersion: app.fybrik.io/v1alpha1
 kind: Plotter
 metadata:
   name: app1-ns1 # plotter name is a combination of app and namespace
-  namespace: m4d-system
+  namespace: fybrik-system
   labels:
 spec:
-  appSelector: # Selector of the application that uses this workload
-    clusterName: thegreendragon
+  appSelector:
+    clusterName: ""
     workloadSelector:
       matchLabels:
-        app: demoapp
+        app: ws-notebook
   assets:
-  - assetId: "m4d-notebook-sample/paysim"
-    cluster: thegreendragon
-    credentials:
-      read:
+    fybrik-notebook-sample/paysim-csv:
+      assetDetails:
+        connection:
+          name: paysim-csv
+          s3:
+            bucket: notebook-sample
+            endpoint: s3.eu-gb.cloud-object-storage.appdomain.cloud
+            object_key: data.csv
+          type: 2
+        format: csv
         vault:
-          address: http://vault.m4d-system:8200
-          authPath: /v1/auth/kubernetes/login
-          role: module
-          secretPath: /v1/kubernetes-secrets/paysim?namespace=m4d-notebook-sample
-    connection:
-      s3:
-        endpoint: localhost:8001
-        bucket: srcbucket
-        object: data.parq
-    dataformat: parquet
-  - assetId: "m4d-notebook-sample/users"
-    cluster: thegreendragon
-    credentials:
-      read:
+          read:
+            address: http://vault.fybrik-system:8200
+            authPath: ""
+            role: module
+            secretPath: /v1/kubernetes-secrets/paysim-csv?namespace=fybrik-notebook-sample
+    fybrik-notebook-sample/users:
+      assetDetails:
+        connection:
+          name: users
+          s3:
+            bucket: notebook-sample
+            endpoint: s3.eu-gb.cloud-object-storage.appdomain.cloud
+            object_key: users.csv
+          type: 2
+        format: csv
         vault:
-          address: http://vault.m4d-system:8200
-          authPath: /v1/auth/kubernetes/login
-          role: module
-          secretPath: /v1/kubernetes-secrets/users?namespace=m4d-notebook-sample
-    connection:
-      s3:
-        endpoint: localhost:8001
-        bucket: srcbucket
-        object: users.parq
-    dataformat: parquet
-  - assetId: "m4d-notebook-sample/inventory"
-    cluster: thegreendragon
-    credentials:
-      read:
+          read:
+            address: http://vault.fybrik-system:8200
+            authPath: ""
+            role: module
+            secretPath: /v1/kubernetes-secrets/paysim-csv?namespace=fybrik-notebook-sample
+    fybrik-notebook-sample/inventory:
+      assetDetails:
+        connection:
+          name: inventory
+          s3:
+            bucket: notebook-sample
+            endpoint: s3.eu-gb.cloud-object-storage.appdomain.cloud
+            object_key: inventory.csv
+          type: 2
+        format: csv
         vault:
-          address: http://vault.m4d-system:8200
-          authPath: /v1/auth/kubernetes/login
-          role: module
-          secretPath: /v1/kubernetes-secrets/inventory?namespace=m4d-notebook-sample
-    connection:
-      s3:
-        endpoint: localhost:8001
-        bucket: srcbucket
-        object: inventory.parq
-    dataformat: parquet
+          read:
+            address: http://vault.fybrik-system:8200
+            authPath: ""
+            role: module
+            secretPath: /v1/kubernetes-secrets/paysim-csv?namespace=fybrik-notebook-sample
   flows:
   - name: flow-paysim
     flowType: read
-    assetId: "m4d-notebook-sample/paysim"
-    subflows:
-    - name: subflow-paysim
-      flowType: read
-      triggers: 
-      - workload
+    assetId: "m4d-notebook-sample/paysim-csv"
+    subFlows:
+    - flowType: read
+      name: ""
       steps:
-      - - name: step1
-          cluster: thegreendragon
+      - - cluster: thegreendragon
+          name: ""
           template: read-and-transform
           parameters:
-            source:
-              assetId: "m4d-notebook-sample/paysim"
             api:
-              service:
-                assetID: m4d-notebook-sample/paysim
-                interfaceDetails:
-                  protocol: arrow-flight
-                  dataformat: arrow
-            actions:
-            - action: redact
-              column: field1
+              endpoint:
+                hostname: notebook-fybrik-notebook-sample-ar-c2308.fybrik-blueprints
+                port: 80
+                scheme: grpc
+              format: arrow
+            source:
+              assetId: fybrik-notebook-sample/paysim-csv
+            action:
+            - name: RedactAction
+              description: "redacting columns: [nameOrig]"
+              columns:
+              - nameOrig
+              options:
+                redactValue: "XXXXX"
+      triggers:
+      - workload
   - name: flow-users
     flowType: read
     assetId: "m4d-notebook-sample/users"
-    subflows:
+    subFlows:
     - name: subflow-users
       flowType: read
-      triggers: 
-      - workload
       steps:
-      - - name: step1
+      - - name: ""
           cluster: thegreendragon
           template: read-and-transform
           parameters:
-            source:
-              assetId: "m4d-notebook-sample/users"
             api:
-              service:
-                assetID: m4d-notebook-sample/users
-                interfaceDetails:
-                  protocol: arrow-flight
-                  dataformat: arrow
-            actions:
-            - action: redact
-              column: blood_group
+              endpoint:
+                hostname: notebook-fybrik-notebook-sample-ar-c2308.fybrik-blueprints
+                port: 80
+                scheme: grpc
+              format: arrow
+            source:
+              assetId: fybrik-notebook-sample/users
+            action:
+            - name: RedactAction
+              description: "redacting columns: [nameOrig]"
+              columns:
+              - bloodGroup 
+              options:
+                redactValue: "XXXXX"
+      triggers:
+      - workload
   - name: flow-inventory
     flowType: read
     assetId: "m4d-notebook-sample/inventory"
-    subflows:
+    subFlows:
     - name: subflow-inventory
       flowType: read
-      triggers: 
-      - workload
       steps:
-      - - name: step1
+      - - name: ""
           cluster: thegreendragon
           template: read-and-transform
           parameters:
-            source:
-              assetId: "m4d-notebook-sample/inventory"
             api:
-              service:
-                assetID: m4d-notebook-sample/inventory
-                interfaceDetails:
-                  protocol: arrow-flight
-                  dataformat: arrow
-            actions:
-            - action: redact
-              column: field2
+              endpoint:
+                hostname: notebook-fybrik-notebook-sample-ar-c2308.fybrik-blueprints
+                port: 80
+                scheme: grpc
+              format: arrow
+            source:
+              assetId: fybrik-notebook-sample/inventory
+            action:
+            - name: RedactAction
+              description: "redacting columns: [nameOrig]"
+              columns:
+              - nameOrig
+              options:
+                redactValue: "XXXXX"
+      triggers:
+      - workload
   templates:
-  - name: read-and-transform
-    modules:
-    - name: arrow-flight-read
-      kind: M4DModule
-      chart:
-        name: ghcr.io/mesh-for-data/read-module:0.1.0
-    - name: transform-conf
-      kind: M4DModule
-      chart:
-        name: ghcr.io/mesh-for-data/m4d-arrow-flight-transform-conf:0.1.0
+    read-and-transform:
+      modules:
+      - name: read
+        chart:
+          name: ghcr.io/fybrik/arrow-flight-module-chart:latest
+          values:
+            image.tag: latest
+        scope: workload
+        type: service
+      - name: transform-conf
+        chart:
+          name: ghcr.io/mesh-for-data/fybrik-arrow-flight-transform-conf:0.1.0
+        type: plugin
 status:
-  observedState: Not Ready
-  observedGeneration: 1
-  # The global modules are generated when the blueprints are generated and injected into them.
-  # Yet they still have a status that is important to the workflow.
-  flows:
-  - name: flow-paysim
-    status: Ready
-    subflows:
-    - name: subflow-paysim
-      status: Ready
-  - name: flow-users
-    status: Ready
-    subflows:
-    - name: subflow-users
-      status: Ready
-  - name: flow-inventory
-    status: Ready
-    subflows:
-    - name: subflow-inventory
-      status: Not Ready
   assets:
-  - name: m4d-notebook-sample/paysim
-    endpoint: app1-ns1.m4d-blueprints
-    port: 8080
-    status: Ready
-  - name: m4d-notebook-sample/users
-    endpoint: app1-ns1.m4d-blueprints
-    port: 8080
-    status: Ready
-  - name: m4d-notebook-sample/inventory
-    endpoint: app1-ns1.m4d-blueprints
-    port: 8080
-    status: Not Ready
-    errors:
-    - "This would be a possible error"
-  conditions:
-  - type: Error
-    status: "False"
-    message: "This would be a possible error"
+    fybrik-notebook-sample/paysim-csv:
+      ready: true
+    fybrik-notebook-sample/users:
+      ready: true
+    fybrik-notebook-sample/inventory:
+      ready: true
+  blueprints:
+    thegreendragon:
+      name: my-notebook-tmp-33uu3-fybrik-notebook-sample
+      namespace: fybrik-blueprints
+      status:
+        modules:
+          arrow-flight-module:
+            ready: true
+        observedGeneration: 1
+        observedState:
+          ready: true
+        releases:
+          notebook-fybrik-notebook-sample-ar-c2308: 1
+  observedGeneration: 1
+  observedState:
+    ready: true
+  readyTimestamp: "2021-10-06T08:58:59Z"
