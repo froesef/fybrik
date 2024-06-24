@@ -54,8 +54,8 @@ spec:
           dataformat: parquet
   - name: transform-step-paysim
     chart:
-      name: ghcr.io/mesh-for-data/m4d-arrow-flight-transform-conf:0.1.0
-    serviceModule: app1-ns1-read # name of service to be configured
+      name: ghcr.io/mesh-for-data/m4d-arrow-flight-transform-plugin:0.1.0
+    serviceModule: app1-ns1-read # name of service that this plugin is used in
     arguments:
       read:
         - assetId: "m4d-notebook-sample/paysim"
@@ -65,8 +65,8 @@ spec:
           dataformat: arrow
   - name: transform-step-users
     chart:
-      name: ghcr.io/mesh-for-data/m4d-arrow-flight-transform-conf:0.1.0
-    serviceModule: app1-ns1-read # name of service to be configured
+      name: ghcr.io/mesh-for-data/m4d-arrow-flight-transform-plugin:0.1.0
+    serviceModule: app1-ns1-read # name of service that this plugin is used in
     arguments:
       read:
         - assetId: "m4d-notebook-sample/users"
@@ -76,8 +76,8 @@ spec:
           dataformat: arrow
   - name: transform-step-inventory
     chart:
-      name: ghcr.io/mesh-for-data/m4d-arrow-flight-transform-conf:0.1.0
-    serviceModule: app1-ns1-read # name of service to be configured
+      name: ghcr.io/mesh-for-data/m4d-arrow-flight-transform-plugin:0.1.0
+    serviceModule: app1-ns1-read # name of service that this plugin is used in
     arguments:
       read:      
         - assetId: "m4d-notebook-sample/inventory"
